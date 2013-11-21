@@ -168,6 +168,64 @@ TestServer.start(config.public_url)
   )
 
   test(
+    'create account with rpid',
+    function (t) {
+      var email = uniqueID() +'@example.com'
+      var password = 'allyourbasearebelongtous'
+      var client = null
+      Client.create(config.public_url, email, password, 'abcdef')
+        .then(
+          function (x) {
+            client = x
+          }
+        )
+        .then(
+          function () {
+            return waitForCode(email)
+          }
+        )
+        .then(
+          function () {
+            t.equal(emailRPIDs[email], 'abcdef')
+            client.rpid = '123456'
+            return client.requestVerifyEmail()
+          }
+        )
+        .then(
+          function () {
+            return waitForCode(email)
+          }
+        )
+        .then(
+          function () {
+            t.equal(emailRPIDs[email], '123456')
+            client.rpid = null
+            return client.requestVerifyEmail()
+          }
+        )
+        .then(
+          function () {
+            return waitForCode(email)
+          }
+        )
+        .then(
+          function () {
+            t.equal(emailRPIDs[email], null)
+          }
+        )
+        .done(
+          function () {
+            t.end()
+          },
+          function (err) {
+            t.fail(err.message || err.error)
+            t.end()
+          }
+        )
+    }
+  )
+
+  test(
     'forgot password',
     function (t) {
       var email = uniqueID() +'@example.com'
@@ -448,7 +506,9 @@ var mail = new Mail('127.0.0.1', true)
 
 var codeMatch = /X-\w+-Code: (\w+)/
 var toMatch = /To: (\w+@\w+\.\w+)/
+var rpidMatch = /rpid=3D(\w+)/
 var emailCodes = {}
+var emailRPIDs = {}
 
 // This test helper creates fresh account for the given email and password.
 function createFreshAccount(email, password) {
@@ -476,12 +536,18 @@ mail.on(
   function (email) {
     var matchCode = codeMatch.exec(email)
     var matchEmail = toMatch.exec(email)
+    var matchRPID = rpidMatch.exec(email)
     if (matchCode && matchEmail) {
       emailCodes[matchEmail[1]] = matchCode[1]
     }
     else {
       console.error('No verify code match')
       console.error(email)
+    }
+    if (matchRPID) {
+      emailRPIDs[matchEmail[1]] = matchRPID[1]
+    } else {
+      emailRPIDs[matchEmail[1]] = null
     }
   }
 )

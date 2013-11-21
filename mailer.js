@@ -73,10 +73,14 @@ module.exports = function (config, log) {
     return d.promise
   }
 
-  Mailer.prototype.sendVerifyCode = function (email, code, uid) {
+  Mailer.prototype.sendVerifyCode = function (email, code, uid, rpid) {
     log.trace({ op: 'mailer.sendVerifyCode', email: email, uid: uid })
     var template = templates.verify
-    var link = this.verification_url + '?uid=' + uid + '#code=' + code
+    var link = this.verification_url + '?uid=' + uid
+    if (rpid) {
+      link += '&rpid=' + rpid
+    }
+    link += '#code=' + code
     var reportLink = this.report_url
 
     var values = {

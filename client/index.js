@@ -28,6 +28,7 @@ function Client(origin) {
   this.kA = null
   this.wrapKb = null
   this._devices = null
+  this.rpid = null
 }
 
 Client.Api = ClientApi
@@ -86,8 +87,16 @@ Client.prototype.setupCredentials = function (email, password, customSalt, custo
     )
 }
 
-Client.create = function (origin, email, password, callback) {
+Client.create = function (origin, email, password, rpid, callback) {
   var c = new Client(origin)
+ 
+  if (typeof rpid === 'function' && typeof callback === 'undefined')  {
+    callback = rpid
+    rpid = null
+  }
+  if (rpid) {
+    c.rpid = rpid
+  }
 
   var p = c.setupCredentials(email, password)
     .then(
@@ -158,6 +167,7 @@ Client.parse = function (string) {
   client.forgotPasswordToken = object.forgotPasswordToken
   client.kA = object.kA
   client.wrapKb = object.wrapKb
+  client.rpid = object.rpid || null
 
   return client
 }
@@ -175,7 +185,8 @@ Client.prototype.create = function (callback) {
       scrypt_p: 1,
       PBKDF2_rounds_2: 20000,
       salt: this.passwordSalt
-    }
+    },
+    this.rpid
   )
     .then(
       function (a) {
@@ -383,7 +394,7 @@ Client.prototype.requestVerifyEmail = function (callback) {
   var o = this.sessionToken ? P(null) : this.login()
   var p = o.then(
     function () {
-      return this.api.recoveryEmailResendCode(this.sessionToken)
+      return this.api.recoveryEmailResendCode(this.sessionToken, this.rpid)
     }.bind(this)
   )
   if (callback) {

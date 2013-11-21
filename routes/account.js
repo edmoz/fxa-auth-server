@@ -6,11 +6,12 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
 
   const HEX_STRING = /^(?:[a-fA-F0-9]{2})+$/
 
-  function sendVerifyCode(email, emailCode, uid) {
+  function sendVerifyCode(email, emailCode, uid, rpid) {
     return mailer.sendVerifyCode(
       Buffer(email, 'hex').toString('utf8'),
       emailCode,
-      uid
+      uid,
+      rpid
     )
   }
 
@@ -38,7 +39,8 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
               //   type: isA.String().required(),
               //   salt: isA.String().regex(HEX_STRING).required()
               // }
-            )
+            ),
+            rpid: isA.String().max(16).regex(HEX_STRING).optional()
           }
         },
         handler: function accountCreate(request) {
@@ -78,7 +80,8 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
                 return sendVerifyCode(
                   account.email,
                   account.emailCode,
-                  account.uid
+                  account.uid,
+                  form.rpid
                 )
                 .then(function () { return account })
               }
@@ -214,11 +217,21 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
         auth: {
           strategy: 'sessionToken'
         },
+        validate: {
+          payload: {
+            rpid: isA.String().max(16).regex(HEX_STRING).optional()
+          }
+        },
         tags: ["account", "recovery"],
         handler: function (request) {
           log.begin('Account.RecoveryEmailResend', request)
           var sessionToken = request.auth.credentials
-          sendVerifyCode(sessionToken.email, sessionToken.emailCode)
+          sendVerifyCode(
+            sessionToken.email,
+            sessionToken.emailCode,
+            sessionToken.uid,
+            request.payload.rpid
+            )
             .done(
               function () {
                 request.reply({})

@@ -75,20 +75,24 @@ ClientApi.prototype.doRequest = function (method, url, token, payload) {
  *   {}
  *
  */
-ClientApi.prototype.accountCreate = function (email, verifier, salt, passwordStretching) {
+ClientApi.prototype.accountCreate = function (email, verifier, salt, passwordStretching, rpid) {
+  var payload =  {
+    email: email,
+    srp: {
+      type: 'SRP-6a/SHA256/2048/v1',
+      verifier: verifier,
+      salt: salt
+    },
+    passwordStretching: passwordStretching
+  }
+  if (rpid) {
+    payload.rpid = rpid
+  }
   return this.doRequest(
     'POST',
     this.baseURL + '/account/create',
     null,
-    {
-      email: email,
-      srp: {
-        type: 'SRP-6a/SHA256/2048/v1',
-        verifier: verifier,
-        salt: salt
-      },
-      passwordStretching: passwordStretching
-    }
+    payload
   )
 }
 
@@ -162,14 +166,19 @@ ClientApi.prototype.recoveryEmailStatus = function (sessionTokenHex) {
     )
 }
 
-ClientApi.prototype.recoveryEmailResendCode = function (sessionTokenHex) {
+ClientApi.prototype.recoveryEmailResendCode = function (sessionTokenHex, rpid) {
+  var payload = {}
+  if (rpid) {
+    payload.rpid = rpid
+  }
   return tokens.SessionToken.fromHex(sessionTokenHex)
     .then(
       function (token) {
         return this.doRequest(
           'POST',
           this.baseURL + '/recovery_email/resend_code',
-          token
+          token,
+          payload
         )
       }.bind(this)
     )
