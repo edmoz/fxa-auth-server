@@ -168,7 +168,7 @@ TestServer.start(config.public_url)
   )
 
   test(
-    'create account with rpid',
+    'create account with service identifier',
     function (t) {
       var email = uniqueID() +'@example.com'
       var password = 'allyourbasearebelongtous'
@@ -186,8 +186,8 @@ TestServer.start(config.public_url)
         )
         .then(
           function () {
-            t.equal(emailRPIDs[email], 'abcdef')
-            client.rpid = '123456'
+            t.equal(emailServices[email], 'abcdef')
+            client.service = '123456'
             return client.requestVerifyEmail()
           }
         )
@@ -198,8 +198,8 @@ TestServer.start(config.public_url)
         )
         .then(
           function () {
-            t.equal(emailRPIDs[email], '123456')
-            client.rpid = null
+            t.equal(emailServices[email], '123456')
+            client.service = null
             return client.requestVerifyEmail()
           }
         )
@@ -210,7 +210,7 @@ TestServer.start(config.public_url)
         )
         .then(
           function () {
-            t.equal(emailRPIDs[email], null)
+            t.equal(emailServices[email], null)
           }
         )
         .done(
@@ -506,9 +506,9 @@ var mail = new Mail('127.0.0.1', true)
 
 var codeMatch = /X-\w+-Code: (\w+)/
 var toMatch = /To: (\w+@\w+\.\w+)/
-var rpidMatch = /rpid=3D(\w+)/
+var serviceMatch = /service=3D(\w+)/
 var emailCodes = {}
-var emailRPIDs = {}
+var emailServices = {}
 
 // This test helper creates fresh account for the given email and password.
 function createFreshAccount(email, password) {
@@ -536,7 +536,7 @@ mail.on(
   function (email) {
     var matchCode = codeMatch.exec(email)
     var matchEmail = toMatch.exec(email)
-    var matchRPID = rpidMatch.exec(email)
+    var matchService = serviceMatch.exec(email)
     if (matchCode && matchEmail) {
       emailCodes[matchEmail[1]] = matchCode[1]
     }
@@ -544,10 +544,10 @@ mail.on(
       console.error('No verify code match')
       console.error(email)
     }
-    if (matchRPID) {
-      emailRPIDs[matchEmail[1]] = matchRPID[1]
+    if (matchService) {
+      emailServices[matchEmail[1]] = matchService[1]
     } else {
-      emailRPIDs[matchEmail[1]] = null
+      emailServices[matchEmail[1]] = null
     }
   }
 )

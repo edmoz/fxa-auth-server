@@ -63,7 +63,7 @@ module.exports = function (log, isA, error, public_url, Client, crypto, db) {
             public_url,
             Buffer(form.email, 'hex').toString('utf8'),
             form.password,
-            form.rpid
+            form.service
           )
           .done(
             function (client) {
@@ -79,7 +79,7 @@ module.exports = function (log, isA, error, public_url, Client, crypto, db) {
             // TODO: still need to validate the utf8 string is a valid email
             email: isA.String().max(1024).regex(HEX_STRING).required(),
             password: isA.String().required(),
-            rpid: isA.String().max(16).regex(HEX_STRING).optional()
+            service: isA.String().max(16).alphanum().optional()
           }
         }
       }

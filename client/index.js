@@ -28,7 +28,7 @@ function Client(origin) {
   this.kA = null
   this.wrapKb = null
   this._devices = null
-  this.rpid = null
+  this.service = null
 }
 
 Client.Api = ClientApi
@@ -87,15 +87,15 @@ Client.prototype.setupCredentials = function (email, password, customSalt, custo
     )
 }
 
-Client.create = function (origin, email, password, rpid, callback) {
+Client.create = function (origin, email, password, service, callback) {
   var c = new Client(origin)
  
-  if (typeof rpid === 'function' && typeof callback === 'undefined')  {
-    callback = rpid
-    rpid = null
+  if (typeof service === 'function' && typeof callback === 'undefined')  {
+    callback = service
+    service = null
   }
-  if (rpid) {
-    c.rpid = rpid
+  if (service) {
+    c.service = service
   }
 
   var p = c.setupCredentials(email, password)
@@ -167,7 +167,7 @@ Client.parse = function (string) {
   client.forgotPasswordToken = object.forgotPasswordToken
   client.kA = object.kA
   client.wrapKb = object.wrapKb
-  client.rpid = object.rpid || null
+  client.service = object.service || null
 
   return client
 }
@@ -186,7 +186,7 @@ Client.prototype.create = function (callback) {
       PBKDF2_rounds_2: 20000,
       salt: this.passwordSalt
     },
-    this.rpid
+    this.service
   )
     .then(
       function (a) {
@@ -394,7 +394,7 @@ Client.prototype.requestVerifyEmail = function (callback) {
   var o = this.sessionToken ? P(null) : this.login()
   var p = o.then(
     function () {
-      return this.api.recoveryEmailResendCode(this.sessionToken, this.rpid)
+      return this.api.recoveryEmailResendCode(this.sessionToken, this.service)
     }.bind(this)
   )
   if (callback) {

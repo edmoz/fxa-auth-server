@@ -75,7 +75,7 @@ ClientApi.prototype.doRequest = function (method, url, token, payload) {
  *   {}
  *
  */
-ClientApi.prototype.accountCreate = function (email, verifier, salt, passwordStretching, rpid) {
+ClientApi.prototype.accountCreate = function (email, verifier, salt, passwordStretching, service) {
   var payload =  {
     email: email,
     srp: {
@@ -85,8 +85,8 @@ ClientApi.prototype.accountCreate = function (email, verifier, salt, passwordStr
     },
     passwordStretching: passwordStretching
   }
-  if (rpid) {
-    payload.rpid = rpid
+  if (service) {
+    payload.service = service
   }
   return this.doRequest(
     'POST',
@@ -166,10 +166,10 @@ ClientApi.prototype.recoveryEmailStatus = function (sessionTokenHex) {
     )
 }
 
-ClientApi.prototype.recoveryEmailResendCode = function (sessionTokenHex, rpid) {
+ClientApi.prototype.recoveryEmailResendCode = function (sessionTokenHex, service) {
   var payload = {}
-  if (rpid) {
-    payload.rpid = rpid
+  if (service) {
+    payload.service = service
   }
   return tokens.SessionToken.fromHex(sessionTokenHex)
     .then(

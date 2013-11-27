@@ -6,12 +6,12 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
 
   const HEX_STRING = /^(?:[a-fA-F0-9]{2})+$/
 
-  function sendVerifyCode(email, emailCode, uid, rpid) {
+  function sendVerifyCode(email, emailCode, uid, service) {
     return mailer.sendVerifyCode(
       Buffer(email, 'hex').toString('utf8'),
       emailCode,
       uid,
-      rpid
+      service
     )
   }
 
@@ -40,7 +40,7 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
               //   salt: isA.String().regex(HEX_STRING).required()
               // }
             ),
-            rpid: isA.String().max(16).regex(HEX_STRING).optional()
+            service: isA.String().max(16).alphanum().optional()
           }
         },
         handler: function accountCreate(request) {
@@ -81,7 +81,7 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
                   account.email,
                   account.emailCode,
                   account.uid,
-                  form.rpid
+                  form.service
                 )
                 .then(function () { return account })
               }
@@ -219,7 +219,7 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
         },
         validate: {
           payload: {
-            rpid: isA.String().max(16).regex(HEX_STRING).optional()
+            service: isA.String().max(16).alphanum().optional()
           }
         },
         tags: ["account", "recovery"],
@@ -230,7 +230,7 @@ module.exports = function (log, crypto, P, uuid, isA, error, db, mailer, config)
             sessionToken.email,
             sessionToken.emailCode,
             sessionToken.uid,
-            request.payload.rpid
+            request.payload.service
             )
             .done(
               function () {
